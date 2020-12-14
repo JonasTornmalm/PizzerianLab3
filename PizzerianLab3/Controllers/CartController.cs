@@ -4,7 +4,6 @@ using PizzerianLab3.Data;
 using PizzerianLab3.Data.Entities;
 using PizzerianLab3.DTOs;
 using PizzerianLab3.Models;
-using PizzerianLab3.Models.Cart;
 using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
@@ -41,7 +40,7 @@ namespace PizzerianLab3.Controllers
             var viewCartContent = new DisplayResponseModel();
 
             double totalPrice = 0;
-            foreach (var pizzaOrder in _cart.Order.PizzaOrders)
+            foreach (var pizzaOrder in _cart.Order.Pizzas)
             {
                 var pizzaDisplayModel = new PizzaDisplayModel();
 
@@ -69,7 +68,7 @@ namespace PizzerianLab3.Controllers
 
                 viewCartContent.Pizzas.Add(pizzaDisplayModel);
             }
-            foreach (var sodaOrder in _cart.Order.SodaOrders)
+            foreach (var sodaOrder in _cart.Order.Sodas)
             {
                 var sodaDisplayModel = new SodaDisplayModel();
 
@@ -125,7 +124,7 @@ namespace PizzerianLab3.Controllers
                         pizzaToBake.PizzaIngredients.Add(freshIngredient);
                     }
 
-                    _cart.Order.PizzaOrders.Add(pizzaToBake);
+                    _cart.Order.Pizzas.Add(pizzaToBake);
                 }
 
                 if (sodaOption != null)
@@ -138,7 +137,7 @@ namespace PizzerianLab3.Controllers
                         Price = sodaOption.Price
                     };
 
-                    _cart.Order.SodaOrders.Add(sodaToAdd);
+                    _cart.Order.Sodas.Add(sodaToAdd);
                 }
             }
 
@@ -155,9 +154,9 @@ namespace PizzerianLab3.Controllers
         public async Task<IActionResult> Put([FromBody] UpdateCartDTO request)
         {
             if (!ModelState.IsValid)
-                BadRequest("Bad req");
+                BadRequest("Bad request");
 
-            var pizzaToModify = _cart.Order.PizzaOrders.Where(x => x.Id == request.PizzaId).FirstOrDefault();
+            var pizzaToModify = _cart.Order.Pizzas.Where(x => x.Id == request.PizzaId).FirstOrDefault();
 
             if (pizzaToModify == null)
                 return BadRequest("Could not find pizza id");
@@ -187,11 +186,40 @@ namespace PizzerianLab3.Controllers
         }
 
         // DELETE api/<ValuesController>/5
-        [HttpDelete("{id}")]
+        [HttpDelete]
         [SwaggerOperation(Summary = "Remove items from shopping cart")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete([FromBody] DeleteFromCartDTO request)
         {
+            if (!ModelState.IsValid)
+                BadRequest("Bad request");
 
+            if (!string.IsNullOrWhiteSpace(request.PizzasIds.FirstOrDefault()))
+            {
+                foreach (var pizzaId in request.PizzasIds)
+                {
+                    var pizzaInCart = _cart.Order.Pizzas.Where(x => x.Id.ToString() == pizzaId).FirstOrDefault();
+
+                    if (pizzaInCart != null)
+                        _cart.Order.Pizzas.Remove(pizzaInCart);
+                    else
+                        return BadRequest("There's no pizza with that Id in your shopping cart.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.SodasIds.FirstOrDefault()))
+            {
+                foreach (var sodaId in request.SodasIds)
+                {
+                    var sodaInCart = _cart.Order.Sodas.Where(x => x.Id.ToString() == sodaId).FirstOrDefault();
+
+                    if (sodaInCart != null)
+                        _cart.Order.Sodas.Remove(sodaInCart);
+                    else
+                        return BadRequest("There's no soda with that Id in your shopping cart.");
+                }
+            }
+
+            return Ok(request);
         }
     }
 }

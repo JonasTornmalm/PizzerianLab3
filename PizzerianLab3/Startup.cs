@@ -33,7 +33,6 @@ namespace PizzerianLab3
             .UseLazyLoadingProxies());
 
             services.AddSingleton<CartSingleton>();
-            services.AddSingleton<OrderStoreSingleton>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {

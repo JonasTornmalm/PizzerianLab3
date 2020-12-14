@@ -5,7 +5,7 @@ namespace PizzerianLab3.Data.Entities
 {
     public class Ingredient
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public int MenuNumber { get; set; }
         private string IngredientName;
         public string Name

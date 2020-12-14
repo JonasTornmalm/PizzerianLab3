@@ -9,13 +9,13 @@ namespace PizzerianLab3.Data.Entities
     {
         public Order()
         {
-            PizzaOrders = new List<Pizza>();
-            SodaOrders = new List<Soda>();
+            Pizzas = new List<Pizza>();
+            Sodas = new List<Soda>();
         }
-        public virtual ICollection<Pizza> PizzaOrders { get; set; }
-        public virtual ICollection<Soda> SodaOrders { get; set; }
+        public virtual ICollection<Pizza> Pizzas { get; set; }
+        public virtual ICollection<Soda> Sodas { get; set; }
         
         public double TotalPrice { get; set; }
-        public bool IsEmpty => !PizzaOrders.Any() && !SodaOrders.Any();
+        public bool IsEmpty => !Pizzas.Any() && !Sodas.Any();
     }
 }

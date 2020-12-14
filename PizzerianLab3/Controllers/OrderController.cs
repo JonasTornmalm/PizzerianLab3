@@ -38,8 +38,8 @@ namespace PizzerianLab3.Controllers
                 .Select(x => new 
                 { 
                     x.Id,
-                    x.PizzaOrders,
-                    x.SodaOrders,
+                    x.Pizzas,
+                    x.Sodas,
                     x.TotalPrice
                 }).ToListAsync();
 
@@ -48,7 +48,7 @@ namespace PizzerianLab3.Controllers
             foreach (var order in orders)
             {
                 var viewActiveOrderModel = new DisplayResponseModel();
-                foreach (var pizza in order.PizzaOrders)
+                foreach (var pizza in order.Pizzas)
                 {
                     var viewPizza = new PizzaDisplayModel();
 
@@ -68,12 +68,13 @@ namespace PizzerianLab3.Controllers
                         viewPizza.ExtraIngredients.Add(viewExtraIngredient);
                     }
 
+                    viewPizza.PizzaId = pizza.Id;
                     viewPizza.MenuNumber = pizza.MenuNumber;
                     viewPizza.Name = pizza.Name;
                     viewPizza.Price = pizza.Price;
                     viewActiveOrderModel.Pizzas.Add(viewPizza);
                 }
-                foreach (var soda in order.SodaOrders)
+                foreach (var soda in order.Sodas)
                 {
                     var viewSoda = new SodaDisplayModel();
                     viewSoda.MenuNumber = soda.MenuNumber;
@@ -94,7 +95,7 @@ namespace PizzerianLab3.Controllers
         public async Task<IActionResult> Post()
         {
             if (!ModelState.IsValid)
-                return BadRequest("A validation error occurred. Please check that all fields have been entered correctly.");
+                BadRequest("Bad request");
 
             var itemsInCart = _cart.Order;
             var order = new Order()
@@ -103,38 +104,112 @@ namespace PizzerianLab3.Controllers
                 TotalPrice = itemsInCart.TotalPrice
             };
 
-            foreach (var pizza in itemsInCart.PizzaOrders)
-                order.PizzaOrders.Add(pizza);
+            foreach (var pizza in itemsInCart.Pizzas)
+            {
+                var bakingPizza = new Pizza()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = pizza.Name,
+                    MenuNumber = pizza.MenuNumber,
+                    Price = pizza.Price
+                };
 
-            foreach (var soda in itemsInCart.SodaOrders)
-                order.SodaOrders.Add(soda);
+                foreach (var ingredient in pizza.PizzaIngredients)
+                {
+                    var freshIngredient = new Ingredient()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = ingredient.Name,
+                        MenuNumber = ingredient.MenuNumber,
+                        IngredientOption = ingredient.IngredientOption,
+                        Price = ingredient.Price
+                    };
+                    bakingPizza.PizzaIngredients.Add(freshIngredient);
+                }
+
+                foreach (var extraIngredient in pizza.ExtraIngredients)
+                {
+                    var freshExtraIngredients = new Ingredient()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = extraIngredient.Name,
+                        MenuNumber = extraIngredient.MenuNumber,
+                        IngredientOption = extraIngredient.IngredientOption,
+                        Price = extraIngredient.Price
+                    };
+                    bakingPizza.ExtraIngredients.Add(freshExtraIngredients);
+                }
+
+                order.Pizzas.Add(bakingPizza);
+            }
+
+            foreach (var soda in itemsInCart.Sodas)
+            {
+                var servingSoda = new Soda()
+                {
+                    Id = Guid.NewGuid(),
+                    MenuNumber = soda.MenuNumber,
+                    Name = soda.Name,
+                    Price = soda.Price
+                };
+                order.Sodas.Add(servingSoda);
+            }
 
             _context.Add(order);
             await _context.SaveChangesAsync();
-            
-            return Ok("Your order has been placed.");
+
+            return Ok($"Your order has been placed {order.Id}");
         }
 
         // PUT api/<OrderController>/5
-        [HttpPut("{id}")]
+        [HttpPut]
         [SwaggerOperation(Summary = "Update placed order")]
-        public async Task<IActionResult> Put(Guid id, [FromBody] UpdateOrderStatusDTO request)
+        public async Task<IActionResult> Put([FromBody] UpdateOrderStatusDTO request)
         {
             if (!ModelState.IsValid)
-                return BadRequest("A validation error occurred. Please check that all fields have been entered correctly.");
-            
-            //var order = await _context.Orders.Where(x => x.IsActive && x.Id == id).FirstOrDefaultAsync();
-            //
-            //order.PizzaOrders.Where(x => x.Id == )
+                BadRequest("Bad request");
 
-            return Ok();
+            if (!request.Completed)
+                Ok("No changes has been made.");
+
+            var order = await _context.Orders.Where(x => x.IsActive && x.Id == request.OrderId).FirstOrDefaultAsync();
+
+            if (order == null)
+                return BadRequest("There's no active order with that Id.");
+
+            order.IsActive = false;
+            _context.Update(order);
+            await _context.SaveChangesAsync();
+
+            return Ok($"Order {order.Id} completed");
         }
 
         // DELETE api/<OrderController>/5
-        [HttpDelete("{id}")]
-        [SwaggerOperation(Summary = "Delete placed order")]
-        public void Delete(int id)
+        [HttpDelete]
+        [SwaggerOperation(Summary = "Cancel placed order")]
+        public async Task<IActionResult> Delete([FromBody] CancelOrderDTO request)
         {
+            if (!ModelState.IsValid)
+                BadRequest("Bad request");
+
+            if (!string.IsNullOrWhiteSpace(request.OrderIds.FirstOrDefault()))
+            {
+                foreach (var orderId in request.OrderIds)
+                {
+                    var order = await _context.Orders.Where(x => x.IsActive && x.Id.ToString() == orderId).FirstOrDefaultAsync();
+
+                    if (order != null)
+                    {
+                        order.IsActive = false;
+                        _context.Update(order);
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                        return BadRequest("There's no active order with that Id.");
+                }
+            }
+
+            return Ok(new { canceledOrders = request.OrderIds });
         }
     }
 }

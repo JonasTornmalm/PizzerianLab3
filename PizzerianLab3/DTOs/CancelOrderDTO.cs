@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 namespace PizzerianLab3.DTOs
 {
-    public class UpdateOrderStatusDTO
+    public class CancelOrderDTO
     {
-        public Guid OrderId { get; set; }
-        public bool Completed { get; set; }
+        public List<string> OrderIds { get; set; }
     }
 }
