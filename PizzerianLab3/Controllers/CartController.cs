@@ -36,6 +36,7 @@ namespace PizzerianLab3.Controllers
         {
             if (_cart.Order.IsEmpty)
                 return Ok("Your cart is empty");
+            UpdateTotalPrice();
 
             var viewCartContent = new DisplayResponseModel();
 
@@ -68,6 +69,7 @@ namespace PizzerianLab3.Controllers
 
                 viewCartContent.Pizzas.Add(pizzaDisplayModel);
             }
+
             foreach (var sodaOrder in _cart.Order.Sodas)
             {
                 var sodaDisplayModel = new SodaDisplayModel();
@@ -83,6 +85,19 @@ namespace PizzerianLab3.Controllers
             viewCartContent.TotalPrice = totalPrice;
 
             return Ok(viewCartContent);
+        }
+        private void UpdateTotalPrice()
+        {
+            _cart.Order.TotalPrice = 0;
+
+            foreach (var drink in _cart.Order.Sodas)
+            {
+                _cart.Order.TotalPrice += drink.Price;
+            }
+            foreach (var pizza in _cart.Order.Pizzas)
+            {
+                _cart.Order.TotalPrice += pizza.Price;
+            }
         }
 
         // POST api/<ValuesController>

@@ -45,6 +45,7 @@ namespace PizzerianLab3.Controllers
 
             var viewActiveOrders = new List<DisplayResponseModel>();
 
+            double totalPrice = 0;
             foreach (var order in orders)
             {
                 var viewActiveOrderModel = new DisplayResponseModel();
@@ -72,6 +73,7 @@ namespace PizzerianLab3.Controllers
                     viewPizza.MenuNumber = pizza.MenuNumber;
                     viewPizza.Name = pizza.Name;
                     viewPizza.Price = pizza.Price;
+                    totalPrice += pizza.Price;
                     viewActiveOrderModel.Pizzas.Add(viewPizza);
                 }
                 foreach (var soda in order.Sodas)
@@ -80,10 +82,13 @@ namespace PizzerianLab3.Controllers
                     viewSoda.MenuNumber = soda.MenuNumber;
                     viewSoda.Name = soda.Name;
                     viewSoda.Price = soda.Price;
+                    totalPrice += soda.Price;
                     viewActiveOrderModel.Sodas.Add(viewSoda);
                 }
                 viewActiveOrderModel.OrderId = order.Id;
+                viewActiveOrderModel.TotalPrice = totalPrice;
                 viewActiveOrders.Add(viewActiveOrderModel);
+                totalPrice = 0;
             }
 
             return Ok(viewActiveOrders);
