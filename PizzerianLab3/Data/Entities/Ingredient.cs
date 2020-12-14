@@ -3,8 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PizzerianLab3.Data.Entities
 {
-    public class Ingredient : Entity
+    public class Ingredient
     {
+        public int Id { get; set; }
         public int MenuNumber { get; set; }
         private string IngredientName;
         public string Name

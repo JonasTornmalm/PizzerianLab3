@@ -17,7 +17,7 @@ namespace PizzerianLab3.Extensions
             {
                 using (var context = serviceScope.ServiceProvider.GetService<AppDbContext>())
                 {
-                    if (!context.Pizzas.Any())
+                    if (!context.Menus.Any())
                     {
                         var pizzaMenu = new List<Pizza>()
                         {
@@ -80,8 +80,6 @@ namespace PizzerianLab3.Extensions
                         menu.SodaMenu = sodaMenu;
                         menu.IngredientMenu = extraIngredients;
 
-                        context.AddRange(pizzaMenu);
-                        context.AddRange(sodaMenu);
                         context.Add(menu);
                         context.SaveChanges();
                     }

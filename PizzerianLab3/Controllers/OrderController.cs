@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PizzerianLab3.Data;
 using PizzerianLab3.Data.Entities;
+using PizzerianLab3.DTOs;
 using PizzerianLab3.Models;
 using Swashbuckle.AspNetCore.Annotations;
 using System;
@@ -18,15 +19,17 @@ namespace PizzerianLab3.Controllers
     public class OrderController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly CartSingleton _cart;
 
-        public OrderController(AppDbContext context)
+        public OrderController(AppDbContext context, CartSingleton cart)
         {
             _context = context;
+            _cart = cart;
         }
 
         // GET api/<OrderController>/5
         [HttpGet]
-        [SwaggerOperation(Summary = "Get active orders")]
+        [SwaggerOperation(Summary = "Get all orders in progress")]
         public async Task<IActionResult> Get()
         {
             // All non-completed orders
@@ -37,15 +40,14 @@ namespace PizzerianLab3.Controllers
                     x.Id,
                     x.PizzaOrders,
                     x.SodaOrders,
-                    x.IngredientOrder,
                     x.TotalPrice
                 }).ToListAsync();
 
-            var viewActiveOrders = new List<ViewOrdersDisplayModel>();
+            var viewActiveOrders = new List<DisplayResponseModel>();
 
             foreach (var order in orders)
             {
-                var viewActiveOrderModel = new ViewOrdersDisplayModel();
+                var viewActiveOrderModel = new DisplayResponseModel();
                 foreach (var pizza in order.PizzaOrders)
                 {
                     var viewPizza = new PizzaDisplayModel();
@@ -55,6 +57,15 @@ namespace PizzerianLab3.Controllers
                         var viewIngredient = new IngredientDisplayModel();
                         viewIngredient.Name = ingredient.Name;
                         viewPizza.PizzaIngredients.Add(viewIngredient);
+                    }
+
+                    foreach (var extraIngredient in pizza.ExtraIngredients)
+                    {
+                        var viewExtraIngredient = new ExtraIngredientDisplayModel();
+                        viewExtraIngredient.MenuNumber = extraIngredient.MenuNumber;
+                        viewExtraIngredient.Name = extraIngredient.Name;
+                        viewExtraIngredient.Price = extraIngredient.Price;
+                        viewPizza.ExtraIngredients.Add(viewExtraIngredient);
                     }
 
                     viewPizza.MenuNumber = pizza.MenuNumber;
@@ -70,13 +81,6 @@ namespace PizzerianLab3.Controllers
                     viewSoda.Price = soda.Price;
                     viewActiveOrderModel.Sodas.Add(viewSoda);
                 }
-                foreach (var extraIngredient in order.IngredientOrder)
-                {
-                    var viewExtraIngredient = new ExtraIngredientDisplayModel();
-                    viewExtraIngredient.MenuNumber = extraIngredient.MenuNumber;
-                    viewExtraIngredient.Name = extraIngredient.Name;
-                    viewActiveOrderModel.ExtraIngredients.Add(viewExtraIngredient);
-                }
                 viewActiveOrderModel.OrderId = order.Id;
                 viewActiveOrders.Add(viewActiveOrderModel);
             }
@@ -86,20 +90,35 @@ namespace PizzerianLab3.Controllers
 
         // POST api/<OrderController>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] AddToCartModel request)
+        [SwaggerOperation(Summary = "Place order with items from customer cart")]
+        public async Task<IActionResult> Post()
         {
             if (!ModelState.IsValid)
                 return BadRequest("A validation error occurred. Please check that all fields have been entered correctly.");
 
-            
+            var itemsInCart = _cart.Order;
+            var order = new Order()
+            {
+                Id = Guid.NewGuid(),
+                TotalPrice = itemsInCart.TotalPrice
+            };
 
+            foreach (var pizza in itemsInCart.PizzaOrders)
+                order.PizzaOrders.Add(pizza);
+
+            foreach (var soda in itemsInCart.SodaOrders)
+                order.SodaOrders.Add(soda);
+
+            _context.Add(order);
+            await _context.SaveChangesAsync();
             
-            return Ok(request);
+            return Ok("Your order has been placed.");
         }
 
         // PUT api/<OrderController>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(Guid id, [FromBody] UpdatePizzaOrderModel request)
+        [SwaggerOperation(Summary = "Update placed order")]
+        public async Task<IActionResult> Put(Guid id, [FromBody] UpdateOrderStatusDTO request)
         {
             if (!ModelState.IsValid)
                 return BadRequest("A validation error occurred. Please check that all fields have been entered correctly.");
@@ -113,6 +132,7 @@ namespace PizzerianLab3.Controllers
 
         // DELETE api/<OrderController>/5
         [HttpDelete("{id}")]
+        [SwaggerOperation(Summary = "Delete placed order")]
         public void Delete(int id)
         {
         }

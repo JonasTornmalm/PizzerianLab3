@@ -32,6 +32,8 @@ namespace PizzerianLab3
             .UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
             .UseLazyLoadingProxies());
 
+            services.AddSingleton<CartSingleton>();
+            services.AddSingleton<OrderStoreSingleton>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {

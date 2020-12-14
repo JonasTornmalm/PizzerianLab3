@@ -41,7 +41,7 @@ namespace PizzerianLab3.Controllers
 
             foreach (var pizza in menu.PizzaMenu)
             {
-                var pizzaDisplayModel = new PizzaDisplayModel();
+                var pizzaDisplayModel = new PizzaMenuDisplayModel();
 
                 pizzaDisplayModel.MenuNumber = pizza.MenuNumber;
                 pizzaDisplayModel.Name = pizza.Name;

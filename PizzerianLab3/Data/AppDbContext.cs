@@ -21,8 +21,6 @@ namespace PizzerianLab3.Data
 
         public DbSet<Menu> Menus { get; set; }
         public DbSet<Order> Orders { get; set; }
-        public DbSet<Pizza> Pizzas { get; set; }
-        public DbSet<Soda> Sodas { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

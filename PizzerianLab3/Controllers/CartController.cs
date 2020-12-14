@@ -2,7 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using PizzerianLab3.Data;
 using PizzerianLab3.Data.Entities;
+using PizzerianLab3.DTOs;
 using PizzerianLab3.Models;
+using PizzerianLab3.Models.Cart;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,76 +20,178 @@ namespace PizzerianLab3.Controllers
     public class CartController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly CartSingleton _cart;
 
-        public CartController(AppDbContext context)
+        public CartController(AppDbContext context, CartSingleton cart)
         {
             _context = context;
+            _cart = cart;
         }
 
         // GET: api/<ValuesController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
 
         // GET api/<ValuesController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet]
+        [SwaggerOperation(Summary = "Get current shopping cart")]
+        public ActionResult GetCartContent()
         {
-            return "value";
+            if (_cart.Order.IsEmpty)
+                return Ok("Your cart is empty");
+
+            var viewCartContent = new DisplayResponseModel();
+
+            double totalPrice = 0;
+            foreach (var pizzaOrder in _cart.Order.PizzaOrders)
+            {
+                var pizzaDisplayModel = new PizzaDisplayModel();
+
+                foreach (var ingredient in pizzaOrder.PizzaIngredients)
+                {
+                    var ingredientModel = new IngredientDisplayModel();
+                    ingredientModel.Name = ingredient.Name;
+                    pizzaDisplayModel.PizzaIngredients.Add(ingredientModel);
+                }
+
+                foreach (var extraIngredient in pizzaOrder.ExtraIngredients)
+                {
+                    var extraIngredientModel = new ExtraIngredientDisplayModel();
+                    extraIngredientModel.Name = extraIngredient.Name;
+                    extraIngredientModel.MenuNumber = extraIngredient.MenuNumber;
+                    extraIngredientModel.Price = extraIngredient.Price;
+                    pizzaDisplayModel.ExtraIngredients.Add(extraIngredientModel);
+                }
+
+                pizzaDisplayModel.PizzaId = pizzaOrder.Id;
+                pizzaDisplayModel.MenuNumber = pizzaOrder.MenuNumber;
+                pizzaDisplayModel.Name = pizzaOrder.Name;
+                pizzaDisplayModel.Price = pizzaOrder.Price;
+                totalPrice += pizzaOrder.Price;
+
+                viewCartContent.Pizzas.Add(pizzaDisplayModel);
+            }
+            foreach (var sodaOrder in _cart.Order.SodaOrders)
+            {
+                var sodaDisplayModel = new SodaDisplayModel();
+
+                sodaDisplayModel.Name = sodaOrder.Name;
+                sodaDisplayModel.MenuNumber = sodaOrder.MenuNumber;
+                sodaDisplayModel.Price = sodaOrder.Price;
+                totalPrice += sodaOrder.Price;
+
+                viewCartContent.Sodas.Add(sodaDisplayModel);
+            }
+
+            viewCartContent.TotalPrice = totalPrice;
+
+            return Ok(viewCartContent);
         }
 
         // POST api/<ValuesController>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] AddToCartModel request)
+        [SwaggerOperation(Summary = "Place item to shopping cart")]
+        public async Task<IActionResult> Post([FromBody] AddItemToCartDTO request)
         {
             if (!ModelState.IsValid)
                 BadRequest();
 
-            var pizzaRecipe = await _context.Pizzas.Where(x => x.Name == request.Pizza).FirstOrDefaultAsync();
+            var menu = await _context.Menus.FirstOrDefaultAsync();
 
-            if (pizzaRecipe == null)
-            {
-                return BadRequest();
-            }
+            var pizzaRecipe = menu.PizzaMenu.Where(x => x.MenuNumber == request.PizzaMenuNumber).FirstOrDefault();
+            var sodaOption = menu.SodaMenu.Where(x => x.MenuNumber == request.SodaMenuNumber).FirstOrDefault();
 
-            var pizzaToBake = new Pizza()
+            if (pizzaRecipe == null && sodaOption == null)
+                return BadRequest("No items seleceted.");
+            else
             {
-                MenuNumber = pizzaRecipe.MenuNumber,
-                Name = pizzaRecipe.Name,
-                Price = pizzaRecipe.Price
-            };
-
-            foreach (var ingredient in pizzaRecipe.PizzaIngredients)
-            {
-                var freshIngredient = new Ingredient()
+                if (pizzaRecipe != null)
                 {
-                    Name = ingredient.Name,
-                    IngredientOption = ingredient.IngredientOption,
-                    MenuNumber = ingredient.MenuNumber,
-                    Price = ingredient.Price
-                };
-                pizzaToBake.PizzaIngredients.Add(freshIngredient);
+                    var pizzaToBake = new Pizza()
+                    {
+                        Id = Guid.NewGuid(),
+                        MenuNumber = pizzaRecipe.MenuNumber,
+                        Name = pizzaRecipe.Name,
+                        Price = pizzaRecipe.Price
+                    };
+
+                    foreach (var ingredient in pizzaRecipe.PizzaIngredients)
+                    {
+                        var freshIngredient = new Ingredient()
+                        {
+                            Name = ingredient.Name,
+                            IngredientOption = ingredient.IngredientOption,
+                            MenuNumber = ingredient.MenuNumber,
+                            Price = ingredient.Price
+                        };
+                        pizzaToBake.PizzaIngredients.Add(freshIngredient);
+                    }
+
+                    _cart.Order.PizzaOrders.Add(pizzaToBake);
+                }
+
+                if (sodaOption != null)
+                {
+                    var sodaToAdd = new Soda()
+                    {
+                        Id = Guid.NewGuid(),
+                        MenuNumber = sodaOption.MenuNumber,
+                        Name = sodaOption.Name,
+                        Price = sodaOption.Price
+                    };
+
+                    _cart.Order.SodaOrders.Add(sodaToAdd);
+                }
             }
 
+            return Ok(new 
+            {
+                pizza = (pizzaRecipe == null) ? string.Empty : pizzaRecipe.Name, 
+                soda = (sodaOption == null) ? string.Empty : sodaOption.Name 
+            });
+        }
 
+        // PUT api/<ValuesController>/5
+        [HttpPut]
+        [SwaggerOperation(Summary = "Update shopping cart")]
+        public async Task<IActionResult> Put([FromBody] UpdateCartDTO request)
+        {
+            if (!ModelState.IsValid)
+                BadRequest("Bad req");
 
-            await _context.SaveChangesAsync();
+            var pizzaToModify = _cart.Order.PizzaOrders.Where(x => x.Id == request.PizzaId).FirstOrDefault();
+
+            if (pizzaToModify == null)
+                return BadRequest("Could not find pizza id");
+
+            if (request.ExtraIngredients.Where(x => x.MenuNumber > 0 && x.MenuNumber < 11).Any())
+            {
+                double priceForExtraIngredients = 0;
+                var menu = await _context.Menus.FirstOrDefaultAsync();
+
+                foreach (var ingredient in request.ExtraIngredients)
+                {
+                    var ingredientOption = menu.IngredientMenu.Where(x => x.MenuNumber == ingredient.MenuNumber).FirstOrDefault();
+                    var extraIngridient = new Ingredient()
+                    {
+                        Name = ingredientOption.Name,
+                        MenuNumber = ingredientOption.MenuNumber,
+                        IngredientOption = ingredientOption.IngredientOption,
+                        Price = ingredientOption.Price
+                    };
+                    priceForExtraIngredients += extraIngridient.Price;
+                    pizzaToModify.ExtraIngredients.Add(extraIngridient);
+                    pizzaToModify.Price = pizzaToModify.Price + priceForExtraIngredients;
+                }
+            }
 
             return Ok(request);
         }
 
-        // PUT api/<ValuesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
         // DELETE api/<ValuesController>/5
         [HttpDelete("{id}")]
+        [SwaggerOperation(Summary = "Remove items from shopping cart")]
         public void Delete(int id)
         {
+
         }
     }
 }

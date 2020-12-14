@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PizzerianLab3.Models
+namespace PizzerianLab3.DTOs
 {
-    public class AddToCartModel
+    public class ExtraIngredientDTO
     {
-        public string Pizza { get; set; }
+        public int MenuNumber { get; set; }
     }
 }

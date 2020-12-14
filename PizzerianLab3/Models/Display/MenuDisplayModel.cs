@@ -7,7 +7,7 @@ namespace PizzerianLab3.Models
 {
     public class MenuDisplayModel
     {
-        public List<PizzaDisplayModel> Pizzas { get; set; } = new List<PizzaDisplayModel>();
+        public List<PizzaMenuDisplayModel> Pizzas { get; set; } = new List<PizzaMenuDisplayModel>();
         public List<SodaDisplayModel> Sodas { get; set; } = new List<SodaDisplayModel>();
         public List<ExtraIngredientDisplayModel> ExtraIngredients { get; set; } = new List<ExtraIngredientDisplayModel>();
     }
