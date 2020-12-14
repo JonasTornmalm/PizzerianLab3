@@ -205,6 +205,10 @@ namespace PizzerianLab3.Controllers
                         return BadRequest("There's no pizza with that Id in your shopping cart.");
                 }
             }
+            else
+            {
+                return BadRequest("Please type a valid Pizza id");
+            }
 
             if (!string.IsNullOrWhiteSpace(request.SodasIds.FirstOrDefault()))
             {
@@ -217,6 +221,10 @@ namespace PizzerianLab3.Controllers
                     else
                         return BadRequest("There's no soda with that Id in your shopping cart.");
                 }
+            }
+            else
+            {
+                return BadRequest("Please type a valid Soda id");
             }
 
             return Ok(request);
