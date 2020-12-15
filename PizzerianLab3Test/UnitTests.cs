@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PizzerianLab3;
+using PizzerianLab3.Data.Entities;
 
 namespace PizzerianLab3Test
 {
@@ -7,15 +8,28 @@ namespace PizzerianLab3Test
     public class UnitTests
     {
         [TestMethod]
-        public void PostItemToCart()
+        public void OrderIsEmptyTest()
         {
-            //Arrange
+            var orderNotEmpty = new Order();
+            var orderEmpty = new Order();
 
+            orderNotEmpty.Pizzas.Add(new Pizza());
 
-            //Act
+            Assert.IsFalse(orderNotEmpty.IsEmpty);
+            Assert.IsTrue(orderEmpty.IsEmpty);
+        }
 
+        [TestMethod]
+        public void IngredientNameFromEnumTest()
+        {
+            var ingredient = new Ingredient();
+            ingredient.IngredientOption = IngredientEnum.Artichoke;
 
-            //Assert
+            var expected = "Artichoke";
+
+            var actual = ingredient.Name;
+
+            Assert.AreEqual(expected, actual);
         }
     }
 }

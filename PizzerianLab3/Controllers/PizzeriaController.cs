@@ -37,11 +37,11 @@ namespace PizzerianLab3.Controllers
                 })
                 .FirstOrDefaultAsync();
 
-            var menuDisplayModel = new MenuDisplayModel();
+            var menuDisplayModel = new MenuViewModel();
 
             foreach (var pizza in menu.PizzaMenu)
             {
-                var pizzaDisplayModel = new PizzaMenuDisplayModel();
+                var pizzaDisplayModel = new PizzaMenuViewModel();
 
                 pizzaDisplayModel.MenuNumber = pizza.MenuNumber;
                 pizzaDisplayModel.Name = pizza.Name;
@@ -49,7 +49,7 @@ namespace PizzerianLab3.Controllers
 
                 foreach (var ingredient in pizza.PizzaIngredients)
                 {
-                    var ingredientDisplayModel = new IngredientDisplayModel();
+                    var ingredientDisplayModel = new IngredientViewModel();
                     ingredientDisplayModel.Name = ingredient.Name;
                     pizzaDisplayModel.PizzaIngredients.Add(ingredientDisplayModel);
                 }
@@ -58,7 +58,7 @@ namespace PizzerianLab3.Controllers
 
             foreach (var soda in menu.SodaMenu)
             {
-                var sodaDisplayModel = new SodaDisplayModel();
+                var sodaDisplayModel = new SodaViewModel();
                 sodaDisplayModel.MenuNumber = soda.MenuNumber;
                 sodaDisplayModel.Name = soda.Name;
                 sodaDisplayModel.Price = soda.Price;
@@ -67,7 +67,7 @@ namespace PizzerianLab3.Controllers
 
             foreach (var extraIngredient in menu.IngredientMenu)
             {
-                var extraIngredientDisplayModel = new ExtraIngredientDisplayModel();
+                var extraIngredientDisplayModel = new ExtraIngredientViewModel();
                 extraIngredientDisplayModel.MenuNumber = extraIngredient.MenuNumber;
                 extraIngredientDisplayModel.Name = extraIngredient.Name;
                 extraIngredientDisplayModel.Price = extraIngredient.Price;

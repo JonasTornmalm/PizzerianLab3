@@ -43,26 +43,26 @@ namespace PizzerianLab3.Controllers
                     x.TotalPrice
                 }).ToListAsync();
 
-            var viewActiveOrders = new List<DisplayResponseModel>();
+            var viewActiveOrders = new List<ResponseViewModel>();
 
             double totalPrice = 0;
             foreach (var order in orders)
             {
-                var viewActiveOrderModel = new DisplayResponseModel();
+                var viewActiveOrderModel = new ResponseViewModel();
                 foreach (var pizza in order.Pizzas)
                 {
-                    var viewPizza = new PizzaDisplayModel();
+                    var viewPizza = new PizzaViewModel();
 
                     foreach (var ingredient in pizza.PizzaIngredients)
                     {
-                        var viewIngredient = new IngredientDisplayModel();
+                        var viewIngredient = new IngredientViewModel();
                         viewIngredient.Name = ingredient.Name;
                         viewPizza.PizzaIngredients.Add(viewIngredient);
                     }
 
                     foreach (var extraIngredient in pizza.ExtraIngredients)
                     {
-                        var viewExtraIngredient = new ExtraIngredientDisplayModel();
+                        var viewExtraIngredient = new ExtraIngredientViewModel();
                         viewExtraIngredient.MenuNumber = extraIngredient.MenuNumber;
                         viewExtraIngredient.Name = extraIngredient.Name;
                         viewExtraIngredient.Price = extraIngredient.Price;
@@ -78,7 +78,7 @@ namespace PizzerianLab3.Controllers
                 }
                 foreach (var soda in order.Sodas)
                 {
-                    var viewSoda = new SodaDisplayModel();
+                    var viewSoda = new SodaViewModel();
                     viewSoda.MenuNumber = soda.MenuNumber;
                     viewSoda.Name = soda.Name;
                     viewSoda.Price = soda.Price;

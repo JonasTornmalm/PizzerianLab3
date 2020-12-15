@@ -36,25 +36,24 @@ namespace PizzerianLab3.Controllers
         {
             if (_cart.Order.IsEmpty)
                 return Ok("Your cart is empty");
-            UpdateTotalPrice();
 
-            var viewCartContent = new DisplayResponseModel();
+            var viewCartContent = new ResponseViewModel();
 
             double totalPrice = 0;
             foreach (var pizzaOrder in _cart.Order.Pizzas)
             {
-                var pizzaDisplayModel = new PizzaDisplayModel();
+                var pizzaDisplayModel = new PizzaViewModel();
 
                 foreach (var ingredient in pizzaOrder.PizzaIngredients)
                 {
-                    var ingredientModel = new IngredientDisplayModel();
+                    var ingredientModel = new IngredientViewModel();
                     ingredientModel.Name = ingredient.Name;
                     pizzaDisplayModel.PizzaIngredients.Add(ingredientModel);
                 }
 
                 foreach (var extraIngredient in pizzaOrder.ExtraIngredients)
                 {
-                    var extraIngredientModel = new ExtraIngredientDisplayModel();
+                    var extraIngredientModel = new ExtraIngredientViewModel();
                     extraIngredientModel.Name = extraIngredient.Name;
                     extraIngredientModel.MenuNumber = extraIngredient.MenuNumber;
                     extraIngredientModel.Price = extraIngredient.Price;
@@ -72,7 +71,7 @@ namespace PizzerianLab3.Controllers
 
             foreach (var sodaOrder in _cart.Order.Sodas)
             {
-                var sodaDisplayModel = new SodaDisplayModel();
+                var sodaDisplayModel = new SodaViewModel();
 
                 sodaDisplayModel.Name = sodaOrder.Name;
                 sodaDisplayModel.MenuNumber = sodaOrder.MenuNumber;
@@ -85,19 +84,6 @@ namespace PizzerianLab3.Controllers
             viewCartContent.TotalPrice = totalPrice;
 
             return Ok(viewCartContent);
-        }
-        private void UpdateTotalPrice()
-        {
-            _cart.Order.TotalPrice = 0;
-
-            foreach (var drink in _cart.Order.Sodas)
-            {
-                _cart.Order.TotalPrice += drink.Price;
-            }
-            foreach (var pizza in _cart.Order.Pizzas)
-            {
-                _cart.Order.TotalPrice += pizza.Price;
-            }
         }
 
         // POST api/<ValuesController>
@@ -210,31 +196,30 @@ namespace PizzerianLab3.Controllers
 
             if (!string.IsNullOrWhiteSpace(request.PizzasIds.FirstOrDefault()))
             {
-                foreach (var pizzaId in request.PizzasIds)
+                if (request.PizzasIds.FirstOrDefault() != "string")
                 {
-                    var pizzaInCart = _cart.Order.Pizzas.Where(x => x.Id.ToString() == pizzaId).FirstOrDefault();
+                    foreach (var pizzaId in request.PizzasIds)
+                    {
+                        var pizzaInCart = _cart.Order.Pizzas.Where(x => x.Id.ToString() == pizzaId).FirstOrDefault();
 
-                    if (pizzaInCart != null)
-                        _cart.Order.Pizzas.Remove(pizzaInCart);
-                    else
-                        return BadRequest("There's no pizza with that Id in your shopping cart.");
+                        if (pizzaInCart != null)
+                            _cart.Order.Pizzas.Remove(pizzaInCart);
+                        else
+                            return BadRequest("There's no pizza with that Id in your shopping cart.");
+                    }
                 }
             }
-            else
-            {
-                return BadRequest("Please type a valid Pizza id");
-            }
 
-            if (!string.IsNullOrWhiteSpace(request.SodasIds.FirstOrDefault()))
+            if (request.SodasMenuNumber.Count > 0)
             {
-                foreach (var sodaId in request.SodasIds)
+                foreach (var sodaId in request.SodasMenuNumber)
                 {
-                    var sodaInCart = _cart.Order.Sodas.Where(x => x.Id.ToString() == sodaId).FirstOrDefault();
+                    var sodaInCart = _cart.Order.Sodas.Where(x => x.MenuNumber == sodaId).FirstOrDefault();
 
                     if (sodaInCart != null)
                         _cart.Order.Sodas.Remove(sodaInCart);
                     else
-                        return BadRequest("There's no soda with that Id in your shopping cart.");
+                        return BadRequest("There's no soda with that menu number in your shopping cart.");
                 }
             }
             else

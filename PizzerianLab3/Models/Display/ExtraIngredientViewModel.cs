@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace PizzerianLab3.Models
 {
-    public class ExtraIngredientDisplayModel
+    public class ExtraIngredientViewModel
     {
         public int MenuNumber { get; set; }
         public string Name { get; set; }

@@ -8,6 +8,6 @@ namespace PizzerianLab3.DTOs
     public class DeleteFromCartDTO
     {
         public List<string> PizzasIds { get; set; }
-        public List<string> SodasIds { get; set; }
+        public List<int> SodasMenuNumber { get; set; }
     }
 }

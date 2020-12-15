@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace PizzerianLab3.Models
 {
-    public class DisplayResponseModel
+    public class ResponseViewModel
     {
 		public Guid OrderId { get; set; }
-		public List<PizzaDisplayModel> Pizzas { get; set; } = new List<PizzaDisplayModel>();
-		public List<SodaDisplayModel> Sodas { get; set; } = new List<SodaDisplayModel>();
+		public List<PizzaViewModel> Pizzas { get; set; } = new List<PizzaViewModel>();
+		public List<SodaViewModel> Sodas { get; set; } = new List<SodaViewModel>();
 		public double TotalPrice { get; set; }
 	}
 }

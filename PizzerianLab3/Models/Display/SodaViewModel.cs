@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 
 namespace PizzerianLab3.Models
 {
-    public class IngredientDisplayModel
+    public class SodaViewModel
     {
+        public int MenuNumber { get; set; }
         public string Name { get; set; }
+        public double Price { get; set; }
     }
 }
